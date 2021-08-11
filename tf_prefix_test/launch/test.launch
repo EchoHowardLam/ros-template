@@ -6,7 +6,7 @@
   <group ns="derp">
     <param name="tf_prefix" value="tfsucker" />
 
-    <node pkg="tf_test" type="node" name="setter" output="screen">
+    <node pkg="tf_prefix_test" type="node" name="setter" output="screen">
       <param name="action" value="set"/>
     </node>
   </group>
@@ -14,7 +14,7 @@
   <group ns="bumd">
     <param name="tf_prefix" value="tfsuck" />
 
-    <node pkg="tf_test" type="node" name="getter" output="screen" ns="tfsuck">
+    <node pkg="tf_prefix_test" type="node" name="getter" output="screen" ns="tfsuck">
       <param name="action" value="get"/>
     </node>
   </group>

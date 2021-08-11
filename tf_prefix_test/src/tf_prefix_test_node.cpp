@@ -44,7 +44,7 @@ void send_tf()
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "tf_test");
+    ros::init(argc, argv, "tf_prefix_test");
     ros::NodeHandle node;
 
     ros::NodeHandle private_node("~");
