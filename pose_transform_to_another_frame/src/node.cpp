@@ -55,7 +55,7 @@ int main(int argc, char **argv)
         tf2::Transform inputTFTF;
         tf2::fromMsg(inputTFMsg, inputTFTF);
 
-        ROS_INFO_STREAM(tf2::toMsg(inputPoseTF * inputTFTF.inverse()));
+        ROS_INFO_STREAM(tf2::toMsg(inputTFTF.inverse() * inputPoseTF));
 
         ros::spinOnce();
         loop_rate.sleep();
