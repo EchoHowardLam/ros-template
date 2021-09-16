@@ -1,0 +1,12 @@
+<library path="lib/librqt_docking_helper">
+  <class name="rqt_docking_helper/helper_gui" type="rqt_docking_helper::helper_gui" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      RQT plugin for docking
+    </description>
+    <qtgui>
+       <label>Docking user interface</label>
+       <icon type="theme">system-help</icon>
+       <statustip>RQT plugin for docking.</statustip>
+    </qtgui>
+  </class>
+</library>
