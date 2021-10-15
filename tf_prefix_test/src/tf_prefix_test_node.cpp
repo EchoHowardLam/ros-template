@@ -17,6 +17,11 @@ void listen_tf()
     static tf2_ros::Buffer tfBuffer;
     static tf2_ros::TransformListener tfListener(tfBuffer);
 
+    // The tf lookup will only directly check the given string
+    // Therefore, the given string should be preprocessed by
+    //     ros::NodeHandle private_node("~");
+    //     std::string tf_prefix = tf::getPrefixParam(node);
+    //     frameA = tf::resolve(tf_prefix, frameA);
     geometry_msgs::TransformStamped tf_A_to_B;
     try {
         tf_A_to_B = tfBuffer.lookupTransform(
@@ -34,6 +39,11 @@ void send_tf()
 {
     static tf2_ros::TransformBroadcaster bc;
 
+    // The tf publisher will only directly publish the given string
+    // Therefore, the given string should be preprocessed by
+    //     ros::NodeHandle private_node("~");
+    //     std::string tf_prefix = tf::getPrefixParam(node);
+    //     frameA = tf::resolve(tf_prefix, frameA);
     geometry_msgs::TransformStamped tf_A_to_B;
     tf_A_to_B.header.stamp = ros::Time::now();
     tf_A_to_B.header.frame_id = frameA;
@@ -48,7 +58,7 @@ int main(int argc, char **argv)
     ros::NodeHandle node;
 
     ros::NodeHandle private_node("~");
-    std::string tf_prefix = tf::getPrefixParam(node);
+    std::string tf_prefix = tf::getPrefixParam(node); // Retrieve <param name="tf_prefix" value="..." />
     std::string action = "";
     if (private_node.hasParam("action"))
         private_node.getParam("action", action);
