@@ -12,6 +12,7 @@
 #include <tf2/convert.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+double lidarOffset = 0.0;
 double robotRadius = 1000.0;
 double turningSpeed = 0.1;
 double turningAngle = 0.0;
@@ -48,9 +49,11 @@ double getYawDifference(double yaw1, double yaw2) {
 
 void autoLocateConfigUpdateCallback(auto_locate::AutoLocateConfig &config, uint32_t level)
 {
+    lidarOffset = config.lidar_offset;
     robotRadius = config.robot_radius;
     turningSpeed = config.turning_speed;
     turningAngle = config.turning_angle;
+    willCollideDefined = false;
 }
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
@@ -64,16 +67,16 @@ void doAutoLocateCallback(const std_msgs::Empty::ConstPtr& msg)
 // Update variable willCollide
 void updateCollisionInfo()
 {
-    if (willCollideDefined) return;
+    //if (willCollideDefined) return;
 
+    willCollide = false;
     const auto &msg = lastScanData;
     for (std::size_t i = 0; i < msg.ranges.size(); ++i)
     {
         float range = msg.ranges[i];
         if (msg.range_min <= range && range <= msg.range_max)
         {
-            //float angle = msg.angle_min + i * msg.angle_increment;
-            if (range < robotRadius)
+            if (range + lidarOffset < robotRadius)
             {
                 willCollide = true;
                 break;
@@ -104,11 +107,11 @@ bool rotate(geometry_msgs::Twist &twist)
     }
 
     // Detect potential collisions around the robot
-    if (!willCollideDefined)
+    //if (!willCollideDefined)
         updateCollisionInfo();
     if (willCollide)
     {
-        ROS_WARN("Obstacle is too closee to robot for in place rotation");
+        ROS_WARN("Obstacle is too close to robot for in place rotation. Robot r = %f", robotRadius);
         return false;
     }
 
@@ -119,6 +122,7 @@ bool rotate(geometry_msgs::Twist &twist)
     }
 
     double curYaw = extractYawFromImu(lastImuData);
+    ROS_INFO("Rotating according to stage %d", rotateStage);
     switch (rotateStage)
     {
     case 0:
@@ -133,12 +137,21 @@ bool rotate(geometry_msgs::Twist &twist)
         else
             rotateStage = 2;
         break;
+    case 2:
+        if (getYawDifference(initYaw, curYaw) < 0.0)
+            twist.angular.z = turningSpeed;
+        else
+            rotateStage = 3;
+        break;
     default:
         break;
     }
-    if (rotateStage > 1)
+    if (rotateStage > 2)
+    {
+        ROS_INFO("Auto rotation completed");
         return true;
-    
+    }
+
     return false;
 }
 
@@ -154,7 +167,7 @@ int main(int argc, char **argv)
     server.setCallback(f);
 
     ros::Publisher cmdvelPub = node.advertise<geometry_msgs::Twist>("cmd_vel", 100);
-    ros::Subscriber laserSub = node.subscribe("base_scan", 10, laserCallback);
+    ros::Subscriber laserSub = node.subscribe("scan", 10, laserCallback);
     ros::Subscriber imuSub = node.subscribe("imu", 100, imuCallback);
     ros::Subscriber doAutoLocateSub = node.subscribe("perform_auto_locate", 100, doAutoLocateCallback);
 
