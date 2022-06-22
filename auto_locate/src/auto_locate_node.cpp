@@ -1,6 +1,8 @@
+// WARNING: This code assume the LiDAR is not installed upside-down
+
 #include <ros/ros.h>
 
-#include <math.h>
+#include <cmath>
 
 #include <dynamic_reconfigure/server.h>
 #include <auto_locate/AutoLocateConfig.h>
@@ -9,8 +11,15 @@
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Empty.h>
 
+#include <tf/tf.h>                 // tf::resolve
 #include <tf2/convert.h>
+#include <tf2/LinearMath/Transform.h>
+
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+std::string baseFrame = "base_footprint";
 
 double lidarOffset = 0.0;
 double robotRadius = 1000.0;
@@ -29,6 +38,15 @@ bool initYawDefined;
 double initYaw;
 int rotateStage = 0;
 
+inline double extractYawFromTFMsg(const geometry_msgs::Transform &tfMsg) {
+    tf2::Transform _tf;
+    tf2::fromMsg(tfMsg, _tf);
+
+    double r, p, y;
+    tf2::Matrix3x3 m1(_tf.getRotation());
+    m1.getRPY(r, p, y);
+    return y;
+}
 double extractYawFromImu(const sensor_msgs::Imu &msg)
 {
     double r, p, y;
@@ -67,16 +85,43 @@ void doAutoLocateCallback(const std_msgs::Empty::ConstPtr& msg)
 // Update variable willCollide
 void updateCollisionInfo()
 {
-    //if (willCollideDefined) return;
+    if (willCollideDefined) return;
+
+    const auto &msg = lastScanData;
+
+    // Retrieve transform from base_frame to scan
+    double tfx, tfy, tfa;
+    {
+        static tf2_ros::Buffer tfBuffer;
+        static tf2_ros::TransformListener tfListener(tfBuffer);
+        geometry_msgs::TransformStamped tfsMsgBase2Scan;
+        try {
+            tfsMsgBase2Scan = tfBuffer.lookupTransform(
+                msg.header.frame_id,
+                baseFrame,
+                msg.header.stamp,
+                ros::Duration(0.1)
+            );
+        } catch (tf2::TransformException &ex) {
+            ROS_WARN(ex.what());
+            return;
+        }
+        tfx = tfsMsgBase2Scan.transform.translation.x;
+        tfy = tfsMsgBase2Scan.transform.translation.y;
+        tfa = extractYawFromTFMsg(tfsMsgBase2Scan.transform);
+    }
 
     willCollide = false;
-    const auto &msg = lastScanData;
     for (std::size_t i = 0; i < msg.ranges.size(); ++i)
     {
         float range = msg.ranges[i];
         if (msg.range_min <= range && range <= msg.range_max)
         {
-            if (range + lidarOffset < robotRadius)
+            float angle = msg.angle_min + i * msg.angle_increment + tfa;
+            float
+                x = range * cosf(angle) + tfx,
+                y = range * sinf(angle) + tfy;
+            if (hypotf(x, y) <= robotRadius)
             {
                 willCollide = true;
                 break;
@@ -107,8 +152,10 @@ bool rotate(geometry_msgs::Twist &twist)
     }
 
     // Detect potential collisions around the robot
-    //if (!willCollideDefined)
+    if (!willCollideDefined)
         updateCollisionInfo();
+    if (!willCollideDefined)
+        return false;
     if (willCollide)
     {
         ROS_WARN("Obstacle is too close to robot for in place rotation. Robot r = %f", robotRadius);
@@ -159,6 +206,9 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "auto_locator");
     ros::NodeHandle node;
+
+    std::string tf_prefix = tf::getPrefixParam(node); // Retrieve <param name="tf_prefix" value="..." />
+    baseFrame = tf::resolve(tf_prefix, baseFrame);
 
     dynamic_reconfigure::Server<auto_locate::AutoLocateConfig> server;
     dynamic_reconfigure::Server<auto_locate::AutoLocateConfig>::CallbackType f;
