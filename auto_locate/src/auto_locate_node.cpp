@@ -12,6 +12,8 @@
 #include <std_msgs/Empty.h>
 
 #include <tf/tf.h>                 // tf::resolve
+#include <tf/transform_listener.h> // tf::getPrefixParam
+
 #include <tf2/convert.h>
 #include <tf2/LinearMath/Transform.h>
 
@@ -103,7 +105,7 @@ void updateCollisionInfo()
                 ros::Duration(0.1)
             );
         } catch (tf2::TransformException &ex) {
-            ROS_WARN(ex.what());
+            ROS_WARN("%s", ex.what());
             return;
         }
         tfx = tfsMsgBase2Scan.transform.translation.x;
