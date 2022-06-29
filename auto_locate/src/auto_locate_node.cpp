@@ -99,8 +99,8 @@ void updateCollisionInfo()
         geometry_msgs::TransformStamped tfsMsgBase2Scan;
         try {
             tfsMsgBase2Scan = tfBuffer.lookupTransform(
-                msg.header.frame_id,
                 baseFrame,
+                msg.header.frame_id,
                 msg.header.stamp,
                 ros::Duration(0.1)
             );
