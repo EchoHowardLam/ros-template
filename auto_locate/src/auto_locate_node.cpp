@@ -10,6 +10,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Int32.h>
 
 #include <tf/tf.h>                 // tf::resolve
 #include <tf/transform_listener.h> // tf::getPrefixParam
@@ -219,9 +220,13 @@ int main(int argc, char **argv)
     server.setCallback(f);
 
     ros::Publisher cmdvelPub = node.advertise<geometry_msgs::Twist>("cmd_vel", 100);
+    ros::Publisher autolocateCounterPub = node.advertise<std_msgs::Int32>("auto_locate_counter", 10);
     ros::Subscriber laserSub = node.subscribe("scan", 10, laserCallback);
     ros::Subscriber imuSub = node.subscribe("imu", 100, imuCallback);
     ros::Subscriber doAutoLocateSub = node.subscribe("perform_auto_locate", 100, doAutoLocateCallback);
+
+    std_msgs::Int32 autoLocateCounter;
+    autoLocateCounter.data = 0;
 
     ros::Rate loop_rate(10);
     while (ros::ok())
@@ -230,7 +235,11 @@ int main(int argc, char **argv)
         {
             geometry_msgs::Twist twist;
             if (rotate(twist))
+            {
                 performAutoLocate = false;
+                autoLocateCounter.data++;
+                autolocateCounterPub.publish(autoLocateCounter);
+            }
             cmdvelPub.publish(twist);
         }
 
