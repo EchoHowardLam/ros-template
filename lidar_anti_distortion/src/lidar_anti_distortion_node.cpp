@@ -42,8 +42,8 @@ int main(int argc, char **argv)
     f = boost::bind(&dynReconfigureUpdateCallback, _1, _2);
     server.setCallback(f);
 
-    rlaserPub = node.advertise<sensor_msgs::LaserScan>("/robot1/scan_rect", 100);
-    ros::Subscriber laserSub = node.subscribe("/robot1/scan_distorted", 100, laserCallback);
+    rlaserPub = node.advertise<sensor_msgs::LaserScan>("base_scan_rect", 10);
+    ros::Subscriber laserSub = node.subscribe("base_scan_raw", 10, laserCallback);
 
     ros::spin();
 
