@@ -1,0 +1,7 @@
+/home/rootadmin/catkin_ws/src/ros-template/rosbridgecpp-client/build/CMakeFiles/rebuild_cache.dir
+/home/rootadmin/catkin_ws/src/ros-template/rosbridgecpp-client/build/CMakeFiles/rosbridge_test.dir
+/home/rootadmin/catkin_ws/src/ros-template/rosbridgecpp-client/build/CMakeFiles/edit_cache.dir
+/home/rootadmin/catkin_ws/src/ros-template/rosbridgecpp-client/build/rosbridgecpp/CMakeFiles/rebuild_cache.dir
+/home/rootadmin/catkin_ws/src/ros-template/rosbridgecpp-client/build/rosbridgecpp/CMakeFiles/edit_cache.dir
+/home/rootadmin/catkin_ws/src/ros-template/rosbridgecpp-client/build/rosbridgecpp/Simple-WebSocket-Server/CMakeFiles/rebuild_cache.dir
+/home/rootadmin/catkin_ws/src/ros-template/rosbridgecpp-client/build/rosbridgecpp/Simple-WebSocket-Server/CMakeFiles/edit_cache.dir

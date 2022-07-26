@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/rosbridge_test.dir/src/client.cpp.o  -o rosbridge_test  -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lpthread -lboost_system -lboost_thread -lboost_coroutine -lboost_context -lboost_chrono -lboost_date_time -lboost_atomic -lpthread -lssl -lcrypto 
